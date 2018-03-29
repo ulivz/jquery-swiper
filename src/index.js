@@ -1,49 +1,46 @@
+/*!
+ * jquery-swiper v0.0.1
+ * (c) 2016-2018 ULIVZ
+ * Released under the MIT License.
+ */
+
 function tinySlick(el, options) {
   el = $(el)
 
   options = $.extend({
     breakpoint: 0.25,
-    rebound: 0,
-    mode: 'swipe'
+    mediaBreakpoint: 1024,
+    rebound: 0
   }, options)
 
-  let currentX = 0 // current value of transformX
-  let initX = 0
-  let prevX = 0
-  let nextX = 0
   let $window = $(window)
   let winW = $window.width()
   let maxX = 0
   let minX = winW - el.width()
-  let isMobile = false
-
-  let isMouseDown = true
+  let initX = 0
+  let currentX = 0
+  let startT = 0
+  let endT = 0
+  let isActive = false
+  let prevX = 0
+  let nextX = 0
 
   $window.on('resize', () => {
     winW = $window.width()
   })
 
-  function start(e) {
-    let type = e.originalEvent.type
-    if (type === 'mousedown') {
-      isMouseDown = true
-    }
-    console.warn(type)
-    e = e.touches ? e.touches[0] : e
+  function start(e, cb) {
+    console.warn('start')
+    isActive = true
     prevX = e.pageX || e.x
+    cb && cb()
+    startT = Date.now()
   }
 
-  function move(e) {
-    let type = e.originalEvent.type
-    console.warn(type)
-
-    if (type === 'mousemove' && !isMouseDown) {
-      return
-    }
-    e = e.touches ? e.touches[0] : e
-    nextX = e.pageX
+  function move(e, cb) {
+    if (!isActive) return
+    nextX = e.pageX || e.x
     let diff = nextX - prevX
-    console.log(diff)
     prevX = nextX
     currentX = currentX + diff
     if (currentX > maxX + options.rebound) {
@@ -56,36 +53,15 @@ function tinySlick(el, options) {
     })
   }
 
-  function end(e) {
-    let type = e.originalEvent.type
-    isMouseDown = false
-    console.warn(type)
-    e = e.touches ? e.touches[0] : e
-    // console.log('initX = ' + initX)
-    // console.log('currentX = ' + currentX)
+  function end(e, cb) {
+    console.warn('end')
+    isActive = false
+    endT = Date.now()
 
-    let gain = Math.abs(currentX) / winW
-    let diff = (currentX - initX) / winW
+    let distance = currentX - initX
+    let speed = distance / (endT - startT)
 
-    let maxGain = Math.ceil(gain)
-    let minGain = Math.floor(gain)
-    let shouldSwitch = Math.abs(diff) > options.breakpoint
-
-    // console.log('gain = ' + gain)
-    // console.log('diff = ' + diff)
-    // console.log('Should switch: ' + (shouldSwitch))
-
-    if (diff > 0) {
-      if (initX === 0) {
-        currentX = 0
-      } else {
-        currentX = -winW * (shouldSwitch ? minGain : maxGain)
-      }
-    } else {
-      currentX = -winW * (shouldSwitch ? maxGain : minGain)
-    }
-
-    console.log('currentX = ' + currentX)
+    cb && cb(distance, speed)
 
     if (currentX < minX) {
       currentX = minX
@@ -95,13 +71,11 @@ function tinySlick(el, options) {
 
     initX = currentX
 
-    el.off('touchmove', touchmove)
     el.css({
-      transition: `transform 0.3s`,
+      transition: `transform 0.3s ease-out`,
       transform: `translate3d(${currentX}px, 0, 0)`
     })
     setTimeout(() => {
-      el.on('touchmove', touchmove)
       el.css({
         transition: ''
       })
@@ -110,10 +84,39 @@ function tinySlick(el, options) {
 
   const mousedown = start
   const mousemove = move
-  const mouseup = end
-  const touchstart = start
-  const touchmove = move
-  const touchend = end
+  const mouseup = (e) => {
+    end(e, (distance, speed) => {
+      currentX = currentX + speed * 1000
+    })
+  }
+
+  const touchstart = (e) => {
+    start(e.touches[0] || e)
+  }
+  const touchmove = (e) => {
+    move(e.touches[0] || e)
+  }
+  const touchend = (e) => {
+    end(e, () => {
+      let gain = Math.abs(currentX) / winW
+      let diff = (currentX - initX) / winW
+
+      let maxGain = Math.ceil(gain)
+      let minGain = Math.floor(gain)
+      let shouldSwitch = Math.abs(diff) > options.breakpoint
+
+      if (diff > 0) {
+        if (initX === 0) {
+          currentX = 0
+        } else {
+          currentX = -winW * (shouldSwitch ? minGain : maxGain)
+        }
+      } else {
+        currentX = -winW * (shouldSwitch ? maxGain : minGain)
+      }
+      console.log(currentX)
+    })
+  }
 
   el.on({
     mousedown,
@@ -123,4 +126,5 @@ function tinySlick(el, options) {
     touchmove,
     touchend
   })
+
 }

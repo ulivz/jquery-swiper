@@ -16,7 +16,9 @@
 		}
 
 		#track {
-			cursor: move;
+			/*-webkit-touch-action: none;*/
+			/*-webkit-touch-callout:none;*/
+			/*cursor: move;*/
 			display: inline-block;
 			transform: translate3d(0, 0, 0);
 			white-space: nowrap;
@@ -35,8 +37,10 @@
 
 		@media screen and (min-width: 1024px) {
 			#track img {
+				user-select: text;
 				display: inline-block;
 				height: 300px;
+				-webkit-user-drag: none;
 			}
 		}
 
@@ -44,7 +48,7 @@
 </head>
 <body>
 <div id="app">
-	<div id="track" draggable=true>
+	<div id="track">
 		<img src="http://bjcache.house.sina.com.cn/gongzhang/image/20151208/20151208141943_44148.jpg">
 		<img src="http://www.decorreport.com/images/zh/2033.jpg">
 		<img src="http://bjcache.house.sina.com.cn/gongzhang/image/20151208/20151208141943_44148.jpg">
@@ -59,12 +63,39 @@
 		<img src="http://www.decorreport.com/images/zh/2033.jpg">
 	</div>
 </div>
+<div class="movestatus"></div>
+<div class="clickstatus"></div>
 <script src="http://unpkg.com/jquery"></script>
 <script src="./src/index.js"></script>
 <script>
-  tinySlick($('#track'), {
-    breakpoint: 0.2
-  })
+    tinySlick($('#track'), {
+      breakpoint: 0.2
+    })
+
+//  var clicking = false;
+//
+//  $('#track').mousedown(function () {
+//    clicking = true;
+//    $('.clickstatus').text('mousedown');
+//  });
+//
+//  $('#track').mouseup(function () {
+//    i = 0;
+//  });
+//
+//  $(document).mouseup(function () {
+//    clicking = false;
+//    $('.clickstatus').text('mouseup');
+//    $('.movestatus').text('click released, no more move event');
+//  });
+//  var i = 0;
+//  $('#track').mousemove(function () {
+//    $('.clickstatus').text('mousemove');
+//    if (clicking === false) return;
+//    // Mouse click + moving logic here
+//    $('.movestatus').text('mouse moved ' + i);
+//    i++;
+//  });
 </script>
 </body>
 </html>
