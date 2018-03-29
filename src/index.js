@@ -4,6 +4,9 @@
  * Released under the MIT License.
  */
 
+const PREV = 'PREV'
+const NEXT = 'NEXT'
+
 function tinySlick(el, options) {
   el = $(el)
 
@@ -16,7 +19,8 @@ function tinySlick(el, options) {
   let $window = $(window)
   let winW = $window.width()
   let maxX = 0
-  let minX = winW - el.width()
+  let trackW = el.width()
+  let minX = winW - trackW
   let initX = 0
   let currentX = 0
   let startT = 0
@@ -24,10 +28,49 @@ function tinySlick(el, options) {
   let isActive = false
   let prevX = 0
   let nextX = 0
+  let transitioning = false
 
   $window.on('resize', () => {
     winW = $window.width()
+    trackW = el.width()
   })
+
+  function to(position, duration = 0.5) {
+    if (transitioning) return
+    transitioning = true
+    currentX = position
+    if (position < minX) {
+      currentX = minX
+    } else if (position > maxX) {
+      currentX = maxX
+    }
+    initX = currentX
+    el.css({
+      transition: `transform ${duration}s ease-out`,
+      transform: `translate3d(${currentX}px, 0, 0)`
+    })
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        el.css({
+          transition: ''
+        })
+        resolve()
+        transitioning = false
+      }, duration * 1000)
+    })
+  }
+
+  /**
+   *
+   * @param {number|string} direction
+   */
+  function goto(direction) {
+    if (typeof direction === 'number') {
+      return to(direction)
+    } else if (typeof direction === 'string') {
+      return to(direction === PREV ? currentX + winW : currentX - winW)
+    }
+  }
 
   function start(e, cb) {
     console.warn('start')
@@ -62,24 +105,7 @@ function tinySlick(el, options) {
     let speed = distance / (endT - startT)
 
     cb && cb(distance, speed)
-
-    if (currentX < minX) {
-      currentX = minX
-    } else if (currentX > maxX) {
-      currentX = maxX
-    }
-
-    initX = currentX
-
-    el.css({
-      transition: `transform 0.3s ease-out`,
-      transform: `translate3d(${currentX}px, 0, 0)`
-    })
-    setTimeout(() => {
-      el.css({
-        transition: ''
-      })
-    }, 300)
+    to(currentX, 0.3)
   }
 
   const mousedown = start
@@ -127,4 +153,7 @@ function tinySlick(el, options) {
     touchend
   })
 
+  return {
+    goto
+  }
 }

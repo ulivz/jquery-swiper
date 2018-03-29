@@ -44,6 +44,19 @@
 			}
 		}
 
+		#switcher {
+			margin-top: 20px;
+			text-align: center;
+		}
+
+		#switcher button {
+			outline: none;
+			border-radius: 5px;
+			font-size: 20px;
+			width: 50px;
+			height: 30px;
+		}
+
 	</style>
 </head>
 <body>
@@ -62,40 +75,51 @@
 		<img src="http://bjcache.house.sina.com.cn/gongzhang/image/20151208/20151208141943_44148.jpg">
 		<img src="http://www.decorreport.com/images/zh/2033.jpg">
 	</div>
+	<div id="switcher">
+		<button id="prev"> <</button>
+		<button id="next"> ></button>
+	</div>
 </div>
 <div class="movestatus"></div>
 <div class="clickstatus"></div>
 <script src="http://unpkg.com/jquery"></script>
 <script src="./src/index.js"></script>
 <script>
-    tinySlick($('#track'), {
-      breakpoint: 0.2
-    })
+  const slick = tinySlick($('#track'), {
+    breakpoint: 0.2
+  })
 
-//  var clicking = false;
-//
-//  $('#track').mousedown(function () {
-//    clicking = true;
-//    $('.clickstatus').text('mousedown');
-//  });
-//
-//  $('#track').mouseup(function () {
-//    i = 0;
-//  });
-//
-//  $(document).mouseup(function () {
-//    clicking = false;
-//    $('.clickstatus').text('mouseup');
-//    $('.movestatus').text('click released, no more move event');
-//  });
-//  var i = 0;
-//  $('#track').mousemove(function () {
-//    $('.clickstatus').text('mousemove');
-//    if (clicking === false) return;
-//    // Mouse click + moving logic here
-//    $('.movestatus').text('mouse moved ' + i);
-//    i++;
-//  });
+  const $prev = $('#prev')
+  const $next = $('#next')
+
+  $prev.click(() => slick.goto('PREV'))
+  $next.click(() => slick.goto('NEXT'))
+
+
+  //  var clicking = false;
+  //
+  //  $('#track').mousedown(function () {
+  //    clicking = true;
+  //    $('.clickstatus').text('mousedown');
+  //  });
+  //
+  //  $('#track').mouseup(function () {
+  //    i = 0;
+  //  });
+  //
+  //  $(document).mouseup(function () {
+  //    clicking = false;
+  //    $('.clickstatus').text('mouseup');
+  //    $('.movestatus').text('click released, no more move event');
+  //  });
+  //  var i = 0;
+  //  $('#track').mousemove(function () {
+  //    $('.clickstatus').text('mousemove');
+  //    if (clicking === false) return;
+  //    // Mouse click + moving logic here
+  //    $('.movestatus').text('mouse moved ' + i);
+  //    i++;
+  //  });
 </script>
 </body>
 </html>
