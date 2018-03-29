@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width,initial-scale=1">
+	<title>Swipe</title>
+	<style>
+		html body {
+			border: 0;
+			margin: 0;
+			outline: 0;
+		}
+
+		#app {
+			overflow: hidden;
+		}
+
+		#track {
+			cursor: move;
+			display: inline-block;
+			transform: translate3d(0, 0, 0);
+			white-space: nowrap;
+			font-size: 0;
+			/*transition: transform .5s;*/
+		}
+
+		#track img {
+			display: inline-block;
+			height: 300px;
+			object-fit: cover;
+			width: 100vw;
+		}
+	</style>
+</head>
+<body>
+<div id="app">
+	<div id="track" draggable=true>
+		<img src="http://bjcache.house.sina.com.cn/gongzhang/image/20151208/20151208141943_44148.jpg">
+		<img src="http://www.decorreport.com/images/zh/2033.jpg">
+		<img src="http://bjcache.house.sina.com.cn/gongzhang/image/20151208/20151208141943_44148.jpg">
+		<img src="http://www.decorreport.com/images/zh/2033.jpg">
+		<img src="http://bjcache.house.sina.com.cn/gongzhang/image/20151208/20151208141943_44148.jpg">
+		<img src="http://www.decorreport.com/images/zh/2033.jpg">
+	</div>
+</div>
+<script src="http://unpkg.com/jquery"></script>
+<script src="./src/index.js"></script>
+<script>
+  tinySlick($('#track'), {
+    breakpoint: 0.2
+  })
+</script>
+</body>
+</html>
