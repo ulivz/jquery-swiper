@@ -29,6 +29,7 @@ function tinySlick(el, options) {
   let prevX = 0
   let nextX = 0
   let transitioning = false
+  let posText = 'start'
 
   $window.on('resize', () => {
     winW = $window.width()
@@ -61,6 +62,14 @@ function tinySlick(el, options) {
         })
         resolve()
         transitioning = false
+        let newPostText
+        if (currentX === minX) newPostText = 'end'
+        else if (currentX === maxX) newPostText = 'start'
+        else newPostText = 'middle'
+        if (newPostText !== posText) {
+          posText = newPostText
+          el.trigger('position-change', posText)
+        }
       }, duration * 1000)
     })
   }
