@@ -24,17 +24,33 @@
 			/*transition: transform .5s;*/
 		}
 
-		#track img {
-			display: inline-block;
-			height: 300px;
-			object-fit: cover;
-			width: 100vw;
+		@media screen and (max-width: 1024px) {
+			#track img {
+				display: inline-block;
+				height: 300px;
+				object-fit: cover;
+				width: 100vw;
+			}
 		}
+
+		@media screen and (min-width: 1024px) {
+			#track img {
+				display: inline-block;
+				height: 300px;
+			}
+		}
+
 	</style>
 </head>
 <body>
 <div id="app">
 	<div id="track" draggable=true>
+		<img src="http://bjcache.house.sina.com.cn/gongzhang/image/20151208/20151208141943_44148.jpg">
+		<img src="http://www.decorreport.com/images/zh/2033.jpg">
+		<img src="http://bjcache.house.sina.com.cn/gongzhang/image/20151208/20151208141943_44148.jpg">
+		<img src="http://www.decorreport.com/images/zh/2033.jpg">
+		<img src="http://bjcache.house.sina.com.cn/gongzhang/image/20151208/20151208141943_44148.jpg">
+		<img src="http://www.decorreport.com/images/zh/2033.jpg">
 		<img src="http://bjcache.house.sina.com.cn/gongzhang/image/20151208/20151208141943_44148.jpg">
 		<img src="http://www.decorreport.com/images/zh/2033.jpg">
 		<img src="http://bjcache.house.sina.com.cn/gongzhang/image/20151208/20151208141943_44148.jpg">

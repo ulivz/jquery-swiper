@@ -3,7 +3,7 @@ function tinySlick(el, options) {
 
   options = $.extend({
     breakpoint: 0.2,
-    rebound: 50,
+    rebound: 0,
     mode: 'swipe'
   }, options)
 
@@ -11,9 +11,14 @@ function tinySlick(el, options) {
   let initX = 0
   let prevX
   let nextX
-  let windowWidth = $(window).width()
+  let $window = $(window)
+  let windowWidth = $window.width()
   let max = 0
   let min = windowWidth - el.width()
+
+  $window.on('resize', () => {
+    windowWidth = $window.width()
+  })
 
   function touchstart(event) {
     console.warn('touchstart')
