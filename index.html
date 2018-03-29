@@ -50,12 +50,17 @@
 			text-align: center;
 		}
 
-		#switcher button {
+		#switcher div {
+			display: inline-block;
+			color: #aaa;
+			border: 1px solid #aaa;
 			outline: none;
 			border-radius: 5px;
 			font-size: 20px;
 			width: 50px;
 			height: 30px;
+			line-height: 30px;
+			background-color: white;
 		}
 
 		#badge {
@@ -104,8 +109,8 @@
 		<img src="./img/8.png">
 	</div>
 	<div id="switcher">
-		<button id="prev"> <</button>
-		<button id="next"> ></button>
+		<div id="prev"> Prev </div>
+		<div id="next"> Next </div>
 	</div>
 	<a href="https://github.com/ulivz/jquery-swiper" target="_blank" id="badge"><span class="svg-icon"><svg
 		aria-hidden="true" class="octicon octicon-mark-github" version="1.1" viewBox="0 0 16 16"><path
