@@ -8,153 +8,138 @@ const PREV = 'PREV'
 const NEXT = 'NEXT'
 
 function tinySlick(el, options) {
-  el = $(el)
+  el = $(el);
 
   options = $.extend({
     breakpoint: 0.25,
     mediaBreakpoint: 1024,
     rebound: 0
-  }, options)
+  }, options);
 
-  let $window = $(window)
-  let winW = $window.width()
-  let trackW = el.width()
-  let maxX = 0
-  let minX = winW - trackW
-  let initX = 0
-  let currentX = 0
-  let startT = 0
-  let endT = 0
-  let isActive = false
-  let prevX = 0
-  let nextX = 0
-  let transitioning = false
-  let posText = 'start'
+  let $window = $(window);
+  let winW = $window.width();
+  let trackW = el.width();
+  let maxX = 0;
+  let minX = winW - trackW;
+  let initX = 0;
+  let currentX = 0;
+  let startT = 0;
+  let endT = 0;
+  let isActive = false;
+  let prevX = 0;
+  let nextX = 0;
+  let transitioning = false;
+  let posText = 'start';
 
   $window.on('resize', () => {
-    winW = $window.width()
-    trackW = el.width()
-    minX = winW - trackW
-  })
+    winW = $window.width();
+    trackW = el.width();
+    minX = winW - trackW;
+  });
 
-  function to(position, duration = 0.5) {
-    if (transitioning) return
-    transitioning = true
-    currentX = position
-    if (position < minX) {
-      currentX = minX
-    } else if (position > maxX) {
-      currentX = maxX
+  function toPos(position, duration = 0.5) {
+    if (transitioning) {
+      return
     }
-    // if (initX === currentX && (currentX === minX || currentX === maxX)) {
-    //   transitioning = false
-    //   return
-    // }
-    initX = currentX
+    transitioning = true;
+    currentX = position;
+    if (position < minX) {
+      currentX = minX;
+    } else if (position > maxX) {
+      currentX = maxX;
+    }
+    initX = currentX;
     el.css({
       transition: `transform ${duration}s ease-out`,
       transform: `translate3d(${currentX}px, 0, 0)`
-    })
+    });
     return new Promise((resolve) => {
       setTimeout(() => {
-        el.css({
-          transition: ''
-        })
-        resolve()
-        transitioning = false
-        let newPostText
-        if (currentX === minX) newPostText = 'end'
-        else if (currentX === maxX) newPostText = 'start'
-        else newPostText = 'middle'
-        if (newPostText !== posText) {
-          posText = newPostText
-          el.trigger('position-change', posText)
+        el.css('transition', '');
+        resolve();
+        transitioning = false;
+        let newPostText;
+        if (currentX === minX) {
+          newPostText = 'end';
+        } else if (currentX === maxX) {
+          newPostText = 'start';
+        } else {
+          newPostText = 'middle';
         }
-      }, duration * 1000)
+        if (newPostText !== posText) {
+          posText = newPostText;
+          el.trigger('position-change', posText);
+        }
+      }, duration * 1000);
     })
   }
 
-  /**
-   *
-   * @param {number|string} direction
-   */
-  function goto(direction) {
+  function slideTo(direction) {
     if (typeof direction === 'number') {
-      return to(direction)
+      return toPos(direction);
     } else if (typeof direction === 'string') {
-      return to(direction === PREV ? currentX + winW : currentX - winW)
+      return toPos(direction === PREV ? currentX + winW : currentX - winW);
     }
   }
 
   function start(e, cb) {
-    isActive = true
-    prevX = e.pageX || e.x
-    cb && cb()
-    startT = Date.now()
+    isActive = true;
+    prevX = e.pageX || e.x;
+    cb && cb();
+    startT = Date.now();
   }
 
   function move(e, cb) {
-    if (!isActive) return
-    nextX = e.pageX || e.x
-    let diff = nextX - prevX
-    prevX = nextX
-    currentX = currentX + diff
+    if (!isActive) {
+      return;
+    }
+    nextX = e.pageX || e.x;
+    let diff = nextX - prevX;
+    prevX = nextX;
+    currentX = currentX + diff;
     if (currentX > maxX + options.rebound) {
-      currentX = maxX + options.rebound
+      currentX = maxX + options.rebound;
     } else if (currentX < minX - options.rebound) {
-      currentX = minX - options.rebound
+      currentX = minX - options.rebound;
     }
     requestAnimationFrame(() => {
-      el.css('transform', `translate3d(${currentX}px, 0, 0)`)
-    })
+      el.css('transform', `translate3d(${currentX}px, 0, 0)`);
+    });
   }
 
   function end(e, cb) {
-    console.warn('end')
-    isActive = false
-    endT = Date.now()
-
-    let distance = currentX - initX
-    let speed = distance / (endT - startT)
-
-    cb && cb(distance, speed)
-    to(currentX, 0.3)
+    isActive = false;
+    endT = Date.now();
+    cb && cb();
+    toPos(currentX, 0.3);
   }
 
-  const mousedown = start
-  const mousemove = move
-  const mouseup = (e) => {
-    end(e, (distance, speed) => {
-      currentX = currentX + speed * 1000
-    })
-  }
+  const mousedown = start;
+  const mousemove = move;
+  const mouseup = (e) => end(e, () => {
+    let distance = currentX - initX;
+    let speed = distance / (endT - startT);
+    currentX = currentX + speed * 1000;
+  })
 
-  const touchstart = (e) => {
-    start(e.touches[0] || e)
-  }
-  const touchmove = (e) => {
-    move(e.touches[0] || e)
-  }
-  const touchend = (e) => {
-    end(e, () => {
-      let gain = Math.abs(currentX) / winW
-      let diff = (currentX - initX) / winW
-
-      let maxGain = Math.ceil(gain)
-      let minGain = Math.floor(gain)
-      let shouldSwitch = Math.abs(diff) > options.breakpoint
-
-      if (diff > 0) {
-        if (initX === 0) {
-          currentX = 0
-        } else {
-          currentX = -winW * (shouldSwitch ? minGain : maxGain)
-        }
+  const touchstart = (e) => start(e.touches[0] || e);
+  const touchmove = (e) => move(e.touches[0] || e);
+  const touchend = (e) => end(e, () => {
+    let gain = Math.abs(currentX) / winW;
+    let diff = (currentX - initX) / winW;
+    let maxGain = Math.ceil(gain);
+    let minGain = Math.floor(gain);
+    let shouldSwitch = Math.abs(diff) > options.breakpoint;
+    if (diff > 0) {
+      if (initX === 0) {
+        currentX = 0;
       } else {
-        currentX = -winW * (shouldSwitch ? maxGain : minGain)
+        currentX = -winW * (shouldSwitch ? minGain : maxGain);
       }
-    })
-  }
+    } else {
+      currentX = -winW * (shouldSwitch ? maxGain : minGain);
+    }
+  });
 
   el.on({
     mousedown,
@@ -163,9 +148,8 @@ function tinySlick(el, options) {
     touchstart,
     touchmove,
     touchend
-  })
-
+  });
   return {
-    goto
-  }
+    slideTo
+  };
 }

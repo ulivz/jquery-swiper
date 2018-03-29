@@ -27,6 +27,10 @@
 			/*transition: transform .5s;*/
 		}
 
+		#track img {
+			-webkit-user-drag: none;
+		}
+
 		@media screen and (max-width: 1024px) {
 			#track img {
 				display: inline-block;
@@ -41,7 +45,6 @@
 				user-select: text;
 				display: inline-block;
 				height: 400px;
-				-webkit-user-drag: none;
 			}
 		}
 
@@ -144,8 +147,8 @@
     rebound: 200
   })
 
-  $prev.click(() => slick.goto('PREV'))
-  $next.click(() => slick.goto('NEXT'))
+  $prev.click(() => slick.slideTo('PREV'))
+  $next.click(() => slick.slideTo('NEXT'))
 
   $track.on('position-change', (event, text) => $posStatus.text(text))
 
