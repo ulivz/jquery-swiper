@@ -18,8 +18,8 @@ function tinySlick(el, options) {
 
   let $window = $(window)
   let winW = $window.width()
-  let maxX = 0
   let trackW = el.width()
+  let maxX = 0
   let minX = winW - trackW
   let initX = 0
   let currentX = 0
@@ -33,6 +33,7 @@ function tinySlick(el, options) {
   $window.on('resize', () => {
     winW = $window.width()
     trackW = el.width()
+    minX = winW - trackW
   })
 
   function to(position, duration = 0.5) {
@@ -43,6 +44,10 @@ function tinySlick(el, options) {
       currentX = minX
     } else if (position > maxX) {
       currentX = maxX
+    }
+    if (initX === currentX && (currentX === minX || currentX === maxX)) {
+      transitioning = false
+      return
     }
     initX = currentX
     el.css({
