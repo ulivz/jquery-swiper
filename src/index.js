@@ -45,10 +45,10 @@ function tinySlick(el, options) {
     } else if (position > maxX) {
       currentX = maxX
     }
-    if (initX === currentX && (currentX === minX || currentX === maxX)) {
-      transitioning = false
-      return
-    }
+    // if (initX === currentX && (currentX === minX || currentX === maxX)) {
+    //   transitioning = false
+    //   return
+    // }
     initX = currentX
     el.css({
       transition: `transform ${duration}s ease-out`,
@@ -78,7 +78,6 @@ function tinySlick(el, options) {
   }
 
   function start(e, cb) {
-    console.warn('start')
     isActive = true
     prevX = e.pageX || e.x
     cb && cb()
@@ -145,7 +144,6 @@ function tinySlick(el, options) {
       } else {
         currentX = -winW * (shouldSwitch ? maxGain : minGain)
       }
-      console.log(currentX)
     })
   }
 
