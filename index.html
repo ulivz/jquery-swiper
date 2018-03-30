@@ -130,7 +130,7 @@
 </div>
 <div id="pos">
 	Position Status:
-	<span id="position-status">start</span>
+	<span id="position-status">START</span>
 </div>
 <div class="movestatus"></div>
 <div class="clickstatus"></div>
@@ -150,32 +150,7 @@
   $prev.click(() => slick.slideTo('PREV'))
   $next.click(() => slick.slideTo('NEXT'))
 
-  $track.on('position-change', (event, text) => $posStatus.text(text))
-
-  //  var clicking = false;
-  //
-  //  $('#track').mousedown(function () {
-  //    clicking = true;
-  //    $('.clickstatus').text('mousedown');
-  //  });
-  //
-  //  $('#track').mouseup(function () {
-  //    i = 0;
-  //  });
-  //
-  //  $(document).mouseup(function () {
-  //    clicking = false;
-  //    $('.clickstatus').text('mouseup');
-  //    $('.movestatus').text('click released, no more move event');
-  //  });
-  //  var i = 0;
-  //  $('#track').mousemove(function () {
-  //    $('.clickstatus').text('mousemove');
-  //    if (clicking === false) return;
-  //    // Mouse click + moving logic here
-  //    $('.movestatus').text('mouse moved ' + i);
-  //    i++;
-  //  });
+  $track.on('pos-status-change', (event, text) => $posStatus.text(text))
 </script>
 </body>
 </html>

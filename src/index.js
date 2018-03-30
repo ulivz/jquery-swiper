@@ -146,7 +146,7 @@ function tinySlick(el, options) {
   const mouseup = (e) => end(e, () => {
     let distance = currentX - initX;
     let speed = distance / (endT - startT);
-    currentX = currentX + speed * 500;
+    currentX = currentX + speed * 450;
   });
 
   const touchstart = (e) => start(e.touches ? e.touches[0] : e.originalEvent.touches[0] || e);
