@@ -4,42 +4,61 @@
  * Released under the MIT License.
  */
 
-const PREV = 'PREV'
-const NEXT = 'NEXT'
+const SLICK_DIRECTIONS = {
+  PREV: 'PREV',
+  NEXT: 'NEXT'
+};
+
+const SLICK_POSITIONS = {
+  START: 'START',
+  MIDDLE: 'MIDDLE',
+  END: 'END'
+};
 
 function tinySlick(el, options) {
   el = $(el);
 
   options = $.extend({
     breakpoint: 0.25,
-    mediaBreakpoint: 1024,
     rebound: 0
   }, options);
 
   let $window = $(window);
   let winW = $window.width();
-  let trackW = el.width();
+  let trackW = 0;
   let maxX = 0;
   let minX = winW - trackW;
   let initX = 0;
   let currentX = 0;
   let startT = 0;
   let endT = 0;
-  let isActive = false;
   let prevX = 0;
   let nextX = 0;
+  let dragging = false;
   let transitioning = false;
-  let posText = 'start';
+  let posStatus = SLICK_POSITIONS.START;
+
+  function refreshTrackW() {
+    let w = [...el.children()].map(subEl => $(subEl).width()).reduce((prev, next) => prev + next, 0);
+    trackW = w;
+    el.css('width', w);
+    minX = winW - trackW;
+  }
+
+  refreshTrackW();
 
   $window.on('resize', () => {
+    let oldWinW = winW;
     winW = $window.width();
-    trackW = el.width();
-    minX = winW - trackW;
+    refreshTrackW();
+    toPos(oldWinW / winW * currentX, 0);
   });
 
   function toPos(position, duration = 0.5) {
+    el.trigger('scroll');
+    refreshTrackW();
     if (transitioning) {
-      return
+      return;
     }
     transitioning = true;
     currentX = position;
@@ -56,43 +75,44 @@ function tinySlick(el, options) {
     return new Promise((resolve) => {
       setTimeout(() => {
         el.css('transition', '');
-        resolve();
         transitioning = false;
-        let newPostText;
+        let newPosStatus;
         if (currentX === minX) {
-          newPostText = 'end';
+          newPosStatus = SLICK_POSITIONS.END;
         } else if (currentX === maxX) {
-          newPostText = 'start';
+          newPosStatus = SLICK_POSITIONS.START;
         } else {
-          newPostText = 'middle';
+          newPosStatus = SLICK_POSITIONS.MIDDLE;
         }
-        if (newPostText !== posText) {
-          posText = newPostText;
-          el.trigger('position-change', posText);
+        if (newPosStatus !== posStatus) {
+          posStatus = newPosStatus;
+          el.trigger('pos-status-change', posStatus);
         }
+        el.trigger('scroll');
+        resolve();
       }, duration * 1000);
-    })
+    });
   }
 
   function slideTo(direction) {
     if (typeof direction === 'number') {
       return toPos(direction);
     } else if (typeof direction === 'string') {
-      return toPos(direction === PREV ? currentX + winW : currentX - winW);
+      return toPos(direction === SLICK_DIRECTIONS.PREV ? currentX + winW : currentX - winW);
     }
   }
 
-  function start(e, cb) {
-    isActive = true;
+  function start(e) {
+    dragging = true;
     prevX = e.pageX || e.x;
-    cb && cb();
     startT = Date.now();
   }
 
-  function move(e, cb) {
-    if (!isActive) {
+  function move(e) {
+    if (!dragging) {
       return;
     }
+    el.trigger('scroll');
     nextX = e.pageX || e.x;
     let diff = nextX - prevX;
     prevX = nextX;
@@ -108,8 +128,15 @@ function tinySlick(el, options) {
   }
 
   function end(e, cb) {
-    isActive = false;
+    dragging = false;
     endT = Date.now();
+    if (endT - startT < 100 || initX === currentX) {
+      el.trigger('event-type-change', 'click');
+      return;
+    }
+    el.trigger('event-type-change', 'mouse');
+    e.preventDefault();
+    e.stopPropagation();
     cb && cb();
     toPos(currentX, 0.3);
   }
@@ -119,11 +146,11 @@ function tinySlick(el, options) {
   const mouseup = (e) => end(e, () => {
     let distance = currentX - initX;
     let speed = distance / (endT - startT);
-    currentX = currentX + speed * 1000;
-  })
+    currentX = currentX + speed * 500;
+  });
 
-  const touchstart = (e) => start(e.touches[0] || e);
-  const touchmove = (e) => move(e.touches[0] || e);
+  const touchstart = (e) => start(e.touches ? e.touches[0] : e.originalEvent.touches[0] || e);
+  const touchmove = (e) => move(e.touches ? e.touches[0] : e.originalEvent.touches[0] || e);
   const touchend = (e) => end(e, () => {
     let gain = Math.abs(currentX) / winW;
     let diff = (currentX - initX) / winW;
@@ -145,6 +172,7 @@ function tinySlick(el, options) {
     mousedown,
     mousemove,
     mouseup,
+    mouseleave: mouseup,
     touchstart,
     touchmove,
     touchend
