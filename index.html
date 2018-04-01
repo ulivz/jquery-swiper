@@ -49,7 +49,7 @@
 		}
 
 		#switcher {
-			margin-top: 20px;
+			margin: 20px 0;
 			text-align: center;
 		}
 
@@ -98,8 +98,7 @@
 			fill: black;
 		}
 
-		#pos {
-			line-height: 40px;
+		#pos, #event {
 			color: #bbb;
 			text-align: center;
 		}
@@ -132,6 +131,10 @@
 	Position Status:
 	<span id="position-status">START</span>
 </div>
+<div id="event">
+	Event Status:
+	<span id="event-status">click</span>
+</div>
 <div class="movestatus"></div>
 <div class="clickstatus"></div>
 <script src="http://unpkg.com/jquery"></script>
@@ -141,6 +144,7 @@
   const $prev = $('#prev')
   const $next = $('#next')
   const $posStatus = $('#position-status')
+  const $eventStatus = $('#event-status')
 
   const slick = tinySlick($track, {
     breakpoint: 0.2,
@@ -151,6 +155,7 @@
   $next.click(() => slick.slideTo('NEXT'))
 
   $track.on('pos-status-change', (event, text) => $posStatus.text(text))
+  $track.on('event-type-change', (event, text) => $eventStatus.text(text))
 </script>
 </body>
 </html>
