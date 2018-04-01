@@ -18,11 +18,22 @@ Check out the online demo: http://www.v2js.com/jquery-swiper
 # Usage
 
 ```js
+// Initialize
 const slick = tinySlick($track, {
   breakpoint: 0.2, // % to the screen's width, use to determine whether to switch silde.
   rebound: 200 // maxiunm px value of rebound. set 0 to disable rebound.
 })
 
+// Event
+$track.on('event-type-change', (e, eventType) => {
+  // eventType would be 'click' or 'mouse'(drag or touchmove).
+})
+
+$track.on('pos-status-change', (e, posStatus) => {
+  // posStatus would be 'START', 'MIDDLE' or 'END'.
+})
+
+// Move slide
 slick.slideTo('PREV') // To previos slide
 slick.slideTo('NEXT') // To next slide
 slick.slideTo(100) // To specified position (px)
