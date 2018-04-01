@@ -135,8 +135,6 @@ function tinySlick(el, options) {
       return;
     }
     el.trigger('event-type-change', 'mouse');
-    e.preventDefault();
-    e.stopPropagation();
     cb && cb();
     toPos(currentX, 0.3);
   }
