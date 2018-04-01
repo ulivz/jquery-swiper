@@ -130,7 +130,7 @@ function tinySlick(el, options) {
   function end(e, cb) {
     dragging = false;
     endT = Date.now();
-    if (endT - startT < 100 || initX === currentX) {
+    if (initX === currentX) {
       el.trigger('event-type-change', 'click');
       return;
     }
