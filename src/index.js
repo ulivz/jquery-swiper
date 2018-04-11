@@ -172,15 +172,14 @@ class TinySlick {
   }
 
   onEnd(e, cb) {
-    // Avoid trigger twice.
-    e.stopPropagation();
-    e.preventDefault();
+    // // Avoid trigger twice.
+    // e.stopPropagation();
+    // e.preventDefault();
 
     this.dragging = false;
     this.endT = Date.now();
     if (this.initX === this.currentX) {
       this.el.trigger(EVENT_TYPE_CHANGE_EVENT, EVENT_TYPES.CLICK);
-      this.el.trigger('click');
       return;
     }
     this.el.trigger(EVENT_TYPE_CHANGE_EVENT, EVENT_TYPES.MOVE);
