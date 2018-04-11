@@ -133,7 +133,9 @@
 </div>
 <div id="event">
 	Event Status:
-	<span id="event-status">click</span>
+	<span id="event-status">click</span><br>
+	Click count: <span id="click-count">0</span><br>
+	Touch count: <span id="touch-count">0</span>
 </div>
 <div class="movestatus"></div>
 <div class="clickstatus"></div>
@@ -154,8 +156,24 @@
   $prev.click(() => slick.slideTo('PREV'))
   $next.click(() => slick.slideTo('NEXT'))
 
+  let click = 0
+  let touch = 0
+
+  $track.on('click', () => {
+    alert('click')
+  });
+
   $track.on('pos-status-change', (event, text) => $posStatus.text(text))
-  $track.on('event-type-change', (event, text) => $eventStatus.text(text))
+  $track.on('event-type-change', (event, text) => {
+    if (text === 'click') {
+      click++
+    } else {
+      touch++
+    }
+    $eventStatus.text(text)
+    $('#click-count').text(click)
+    $('#touch-count').text(touch)
+  })
 </script>
 </body>
 </html>

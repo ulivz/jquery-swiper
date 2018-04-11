@@ -4,178 +4,189 @@
  * Released under the MIT License.
  */
 
-const SLICK_DIRECTIONS = {
+const SLICK_POSITIONS = {
+  START: 'START',
   PREV: 'PREV',
   NEXT: 'NEXT'
 };
 
-const SLICK_POSITIONS = {
+const SLICK_POSITION_STATUS = {
   START: 'START',
   MIDDLE: 'MIDDLE',
   END: 'END'
 };
 
-function tinySlick(el, options) {
-  el = $(el);
+const POSITION_STATUS_CHANGE_EVENT = 'pos-status-change';
+const EVENT_TYPE_CHANGE_EVENT = 'event-type-change';
+const EVENT_TYPES = {
+  CLICK: 'click',
+  MOVE: 'move'
+};
 
-  options = $.extend({
-    breakpoint: 0.25,
-    rebound: 0
-  }, options);
+class TinySlick {
+  constructor(el, options) {
+    this.el = $(el);
+    this.options = $.extend({ breakpoint: 0.25, rebound: 0 }, options);
+    this.trackW = 0;         // Slide's track's width
+    this.maxX = 0;         // maximum value of transformX
+    this.minX = 0;         // minimum value of transformX
+    this.initX = 0;         // initial transformX before every move/drag
+    this.currentX = 0;         // current transformX
+    this.startT = 0;         // start timestamp when triggering touchstart/mousedown
+    this.endT = 0;         // end timestamp when triggering touchstart/mousedown
+    this.prevX = 0;         // transformX before triggering each touchmove
+    this.nextX = 0;         // transformX after triggering each touchmove
+    this.dragging = false;     // Whether user is dragged
+    this.transitioning = false;     // Whether slide is in transitioning
+    this.posStatus = SLICK_POSITIONS.START;
+    this.winW = $(window).width();
 
-  let $window = $(window);
-  let winW = $window.width();
-  let trackW = 0;
-  let maxX = 0;
-  let minX = winW - trackW;
-  let initX = 0;
-  let currentX = 0;
-  let startT = 0;
-  let endT = 0;
-  let prevX = 0;
-  let nextX = 0;
-  let dragging = false;
-  let transitioning = false;
-  let posStatus = SLICK_POSITIONS.START;
+    this._refreshTrackW();
 
-  function refreshTrackW() {
-    let w = [...el.children()].map(subEl => $(subEl).width()).reduce((prev, next) => prev + next, 0);
-    trackW = w;
-    el.css('width', w);
-    minX = winW - trackW;
-  }
-
-  refreshTrackW();
-
-  $window.on('resize', () => {
-    let oldWinW = winW;
-    winW = $window.width();
-    refreshTrackW();
-    toPos(oldWinW / winW * currentX, 0);
-  });
-
-  function toPos(position, duration = 0.5) {
-    el.trigger('scroll');
-    refreshTrackW();
-    if (transitioning) {
-      return;
-    }
-    transitioning = true;
-    currentX = position;
-    if (position < minX) {
-      currentX = minX;
-    } else if (position > maxX) {
-      currentX = maxX;
-    }
-    initX = currentX;
-    el.css({
-      transition: `transform ${duration}s ease-out`,
-      transform: `translate3d(${currentX}px, 0, 0)`
+    $(window).on('resize', () => {
+      let oldWinW = this.winW;
+      this.winW = $(window).width();
+      this._refreshTrackW();
+      this._slideTo(oldWinW / this.winW * this.currentX, 0);
     });
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        el.css('transition', '');
-        transitioning = false;
-        let newPosStatus;
-        if (currentX === minX) {
-          newPosStatus = SLICK_POSITIONS.END;
-        } else if (currentX === maxX) {
-          newPosStatus = SLICK_POSITIONS.START;
+
+    const mousedown = this.onStart.bind(this);
+    const mousemove = this.onMove.bind(this);
+    const mouseup = (e) => this.onEnd(e, () => {
+      let distance = this.currentX - this.initX;
+      let speed = distance / (this.endT - this.startT);
+      this.currentX = this.currentX + speed * 450;
+    });
+
+    const touchstart = (e) => this.onStart(e.touches ? e.touches[0] : e.originalEvent.touches[0] || e);
+    const touchmove = (e) => this.onMove(e.touches ? e.touches[0] : e.originalEvent.touches[0] || e);
+    const touchend = (e) => this.onEnd(e, () => {
+      let gain = Math.abs(this.currentX) / this.winW;
+      let diff = (this.currentX - this.initX) / this.winW;
+      let maxGain = Math.ceil(gain);
+      let minGain = Math.floor(gain);
+      let shouldSwitch = Math.abs(diff) > this.options.breakpoint;
+      if (diff > 0) {
+        if (this.initX === 0) {
+          this.currentX = 0;
         } else {
-          newPosStatus = SLICK_POSITIONS.MIDDLE;
+          this.currentX = -this.winW * (shouldSwitch ? minGain : maxGain);
         }
-        if (newPosStatus !== posStatus) {
-          posStatus = newPosStatus;
-          el.trigger('pos-status-change', posStatus);
-        }
-        el.trigger('scroll');
-        resolve();
-      }, duration * 1000);
+      } else {
+        this.currentX = -this.winW * (shouldSwitch ? maxGain : minGain);
+      }
     });
+    this.el.on({
+      mousedown,
+      mousemove,
+      mouseup,
+      mouseleave: mouseup,
+      touchstart,
+      touchmove,
+      touchend
+    });
+
   }
 
-  function slideTo(direction) {
-    if (typeof direction === 'number') {
-      return toPos(direction);
-    } else if (typeof direction === 'string') {
-      return toPos(direction === SLICK_DIRECTIONS.PREV ? currentX + winW : currentX - winW);
+  slideTo(position) {
+    if (position === SLICK_POSITIONS.START) {
+      return this._slideTo(0);
     }
+    return this._slideTo(position === SLICK_POSITIONS.PREV ? this.currentX + this.winW : this.currentX - this.winW);
   }
 
-  function start(e) {
-    dragging = true;
-    prevX = e.pageX || e.x;
-    startT = Date.now();
-  }
-
-  function move(e) {
-    if (!dragging) {
+  /**
+   * Slide to specific position.
+   * @param {number} position
+   * @param {number} duration
+   * @returns {Promise|Promise<T>}
+   */
+  _slideTo(position, duration = 0.5) {
+    this.el.trigger('scroll'); // Fake scroll event, for lazy load
+    this._refreshTrackW();
+    if (this.transitioning) {
       return;
     }
-    el.trigger('scroll');
-    nextX = e.pageX || e.x;
-    let diff = nextX - prevX;
-    prevX = nextX;
-    currentX = currentX + diff;
-    if (currentX > maxX + options.rebound) {
-      currentX = maxX + options.rebound;
-    } else if (currentX < minX - options.rebound) {
-      currentX = minX - options.rebound;
+    this.transitioning = true;
+    this.currentX = position;
+    if (this.currentX < this.minX) {
+      this.currentX = this.minX;
+    } else if (this.currentX > this.maxX) {
+      this.currentX = this.maxX;
+    }
+    this.initX = this.currentX;
+    this.el.css({
+      transition: `transform ${duration}s ease-out`,
+      transform: `translate3d(${this.currentX}px, 0, 0)`
+    });
+    setTimeout(() => {
+      this.el.css('transition', '');
+      this.transitioning = false;
+      let newPosStatus;
+      const { START, MIDDLE, END } = SLICK_POSITION_STATUS;
+      if (this.currentX === this.minX) {
+        newPosStatus = END;
+      } else if (this.currentX === this.maxX) {
+        newPosStatus = START;
+      } else {
+        newPosStatus = MIDDLE;
+      }
+      if (newPosStatus !== this.posStatus) {
+        this.posStatus = newPosStatus;
+        this.el.trigger(POSITION_STATUS_CHANGE_EVENT, this.posStatus);
+      }
+      this.el.trigger('scroll');
+    }, duration * 1000);
+  }
+
+  _refreshTrackW() {
+    let w = [...this.el.children()].map(subEl => $(subEl).width()).reduce((prev, next) => prev + next, 0);
+    this.trackW = w;
+    this.el.css('width', w);
+    this.minX = this.winW - this.trackW;
+  }
+
+  onStart(e) {
+    this.dragging = true;
+    this.prevX = e.pageX || e.x;
+    this.startT = Date.now();
+  }
+
+  onMove(e) {
+    if (!this.dragging) {
+      return;
+    }
+    this.el.trigger('scroll');
+    this.nextX = e.pageX || e.x;
+    let diff = this.nextX - this.prevX;
+    this.prevX = this.nextX;
+    this.currentX = this.currentX + diff;
+    if (this.currentX > this.maxX + this.options.rebound) {
+      this.currentX = this.maxX + this.options.rebound;
+    } else if (this.currentX < this.minX - this.options.rebound) {
+      this.currentX = this.minX - this.options.rebound;
     }
     requestAnimationFrame(() => {
-      el.css('transform', `translate3d(${currentX}px, 0, 0)`);
+      this.el.css('transform', `translate3d(${this.currentX}px, 0, 0)`);
     });
   }
 
-  function end(e, cb) {
-    dragging = false;
-    endT = Date.now();
-    if (initX === currentX) {
-      el.trigger('event-type-change', 'click');
+  onEnd(e, cb) {
+    // Avoid trigger twice.
+    e.stopPropagation();
+    e.preventDefault();
+
+    this.dragging = false;
+    this.endT = Date.now();
+    if (this.initX === this.currentX) {
+      this.el.trigger(EVENT_TYPE_CHANGE_EVENT, EVENT_TYPES.CLICK);
+      this.el.trigger('click');
       return;
     }
-    el.trigger('event-type-change', 'mouse');
+    this.el.trigger(EVENT_TYPE_CHANGE_EVENT, EVENT_TYPES.MOVE);
     cb && cb();
-    toPos(currentX, 0.3);
+    this._slideTo(this.currentX, 0.3);
   }
-
-  const mousedown = start;
-  const mousemove = move;
-  const mouseup = (e) => end(e, () => {
-    let distance = currentX - initX;
-    let speed = distance / (endT - startT);
-    currentX = currentX + speed * 450;
-  });
-
-  const touchstart = (e) => start(e.touches ? e.touches[0] : e.originalEvent.touches[0] || e);
-  const touchmove = (e) => move(e.touches ? e.touches[0] : e.originalEvent.touches[0] || e);
-  const touchend = (e) => end(e, () => {
-    let gain = Math.abs(currentX) / winW;
-    let diff = (currentX - initX) / winW;
-    let maxGain = Math.ceil(gain);
-    let minGain = Math.floor(gain);
-    let shouldSwitch = Math.abs(diff) > options.breakpoint;
-    if (diff > 0) {
-      if (initX === 0) {
-        currentX = 0;
-      } else {
-        currentX = -winW * (shouldSwitch ? minGain : maxGain);
-      }
-    } else {
-      currentX = -winW * (shouldSwitch ? maxGain : minGain);
-    }
-  });
-
-  el.on({
-    mousedown,
-    mousemove,
-    mouseup,
-    mouseleave: mouseup,
-    touchstart,
-    touchmove,
-    touchend
-  });
-  return {
-    slideTo
-  };
 }
+
+const tinySlick = (...args) => new TinySlick(...args);
