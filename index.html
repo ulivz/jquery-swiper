@@ -182,16 +182,22 @@
   $overlay.click(() => {
     $overlay.toggleClass('hidden', true)
   })
+
+  let isEnableClick = false
   $track.on('click', () => {
-    console.log('CLICK')
-    $overlay.toggleClass('hidden', false)
+    if (isEnableClick) {
+      $overlay.toggleClass('hidden', false)
+    }
+
   });
 
   $track.on('pos-status-change', (event, text) => $posStatus.text(text))
   $track.on('event-type-change', (event, text) => {
     if (text === 'click') {
+      isEnableClick = true
       click++
     } else {
+      isEnableClick = false
       touch++
     }
     $eventStatus.text(text)
